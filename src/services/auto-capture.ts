@@ -271,7 +271,7 @@ function getAIResponseMessages(messages: any[], promptMessageId: string): any[] 
   return responseMessages;
 }
 
-function extractAIContent(messages: any[]): {
+export function extractAIContent(messages: any[]): {
   textResponses: string[];
   toolCalls: ToolCallInfo[];
 } {
@@ -293,7 +293,7 @@ function extractAIContent(messages: any[]): {
 
     const toolParts = msg.parts.filter((p: any) => p.type === "tool");
     for (const tool of toolParts) {
-      const name = tool.tool || "unknown";
+      const name = tool.name || tool.tool || "unknown";
       let input = "";
 
       if (tool.state?.input) {
