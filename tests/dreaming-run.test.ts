@@ -52,7 +52,7 @@ function runFixture(scriptBody: string): {
 }
 
 describe("dreaming run API mapping", () => {
-  function apiMappingFixture(runError: string): string {
+  function apiMappingFixture(runError: string, enabled = true): string {
     const storageDir = mkdtempSync(join(tmpdir(), "dream-api-map-"));
     tempDirs.push(storageDir);
     const promptManagerUrl = new URL(
@@ -67,7 +67,7 @@ const storagePath = ${JSON.stringify(storageDir)};
 mkdirSync(storagePath, { recursive: true });
 
 mock.module(${JSON.stringify(configUrl)}, () => ({
-  CONFIG: { storagePath, dreaming: { enabled: true } },
+  CONFIG: { storagePath, dreaming: { enabled: ${enabled} } },
 }));
 mock.module(${JSON.stringify(loggerUrl)}, () => ({
   log: () => {},
@@ -91,6 +91,13 @@ const out = await handleRunDreaming();
 console.log(JSON.stringify(out));
 `;
   }
+
+  it("keeps disabled dreaming off for direct requests with a stable error code", () => {
+    const result = runFixture(apiMappingFixture("service must not run", false));
+    expect(result.stderr).toBe("");
+    expect(result.exitCode).toBe(0);
+    expect(result.parsed).toEqual({ success: false, error: "dreaming_disabled" });
+  });
 
   it("maps concurrent runs to already_running", () => {
     const result = runFixture(apiMappingFixture("Dreaming already running"));

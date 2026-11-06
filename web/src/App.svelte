@@ -105,6 +105,7 @@
 
   $effect(() => {
     const stopRouter = initRouter();
+    void explorer.loadDreamingStatus();
     void (async () => {
       await explorer.loadTags();
       await explorer.loadMemories();
@@ -114,6 +115,7 @@
       await markdownVault.loadStatus();
     })();
     const refreshTimer = setInterval(() => {
+      void explorer.loadDreamingStatus();
       void explorer.loadStats();
       if (!explorer.isSearching && router.view === "project") {
         void explorer.loadMemories();
@@ -350,7 +352,10 @@
               <Button
                 type="button"
                 variant="outline"
-                disabled={explorer.dreamingBusy}
+                disabled={explorer.dreamingUnavailableReason !== null}
+                aria-describedby={explorer.dreamingUnavailableReason
+                  ? "dreaming-status"
+                  : undefined}
                 onclick={explorer.runDreaming}
               >
                 {i18n.t("btn-dreaming")}
@@ -366,6 +371,11 @@
               </Button>
             </div>
           </div>
+          {#if explorer.dreamingUnavailableReason}
+            <p id="dreaming-status" class="text-muted-foreground mt-2 text-sm" role="status">
+              {i18n.t(explorer.dreamingUnavailableReason)}
+            </p>
+          {/if}
         </div>
 
         {#if explorer.migrationNeeded}

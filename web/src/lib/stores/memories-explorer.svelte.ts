@@ -52,6 +52,49 @@ export function createMemoriesExplorer() {
     }>
   >([]);
   let dreamingBusy = $state(false);
+  let dreamingStatus = $state<{ enabled: boolean; isRunning: boolean } | null>(null);
+  let dreamingStatusLoading = $state(true);
+  let dreamingStatusError = $state(false);
+  let dreamingStatusRequest = 0;
+
+  function dreamingUnavailableReason() {
+    if (dreamingBusy) return "status-dreaming";
+    if (dreamingStatusLoading) return "dreaming-status-loading";
+    if (dreamingStatusError || !dreamingStatus) return "dreaming-status-error";
+    if (!dreamingStatus.enabled) return "dreaming-disabled";
+    if (dreamingStatus.isRunning) return "toast-dreaming-already-running";
+    return null;
+  }
+
+  async function loadDreamingStatus() {
+    const request = ++dreamingStatusRequest;
+    dreamingStatusLoading = true;
+    try {
+      const result = await fetchAPI<{ enabled: boolean; isRunning: boolean }>(
+        "/api/dreaming/status",
+        // Finish before the 30-second poll supersedes this response.
+        { timeout: 10_000 }
+      );
+      if (request !== dreamingStatusRequest) return;
+      if (
+        result.success &&
+        typeof result.data?.enabled === "boolean" &&
+        typeof result.data?.isRunning === "boolean"
+      ) {
+        dreamingStatus = result.data;
+        dreamingStatusError = false;
+      } else {
+        dreamingStatus = null;
+        dreamingStatusError = true;
+      }
+    } catch {
+      if (request !== dreamingStatusRequest) return;
+      dreamingStatus = null;
+      dreamingStatusError = true;
+    } finally {
+      if (request === dreamingStatusRequest) dreamingStatusLoading = false;
+    }
+  }
 
   function snapshot() {
     return { currentPage, isSearching, searchQuery, selectedTags };
@@ -490,22 +533,42 @@ export function createMemoriesExplorer() {
   }
 
   async function runDreaming() {
-    if (dreamingBusy) return;
-    const ok = await askConfirm({
-      title: t("confirm-dreaming-title"),
-      detail: t("confirm-dreaming"),
-      confirmLabel: t("btn-dreaming"),
-      tone: "danger",
-    });
-    if (!ok) return;
+    if (dreamingUnavailableReason()) return;
+    // Claim the operation before awaiting confirmation to prevent duplicate dialogs/runs.
     dreamingBusy = true;
-    toast.info(t("status-dreaming"));
+    let attempted = false;
     try {
+      const ok = await askConfirm({
+        title: t("confirm-dreaming-title"),
+        detail: t("confirm-dreaming"),
+        confirmLabel: t("btn-dreaming"),
+        tone: "danger",
+      });
+      if (!ok) return;
+      // Configuration or another run may have changed while the dialog was open.
+      await loadDreamingStatus();
+      if (
+        dreamingStatusLoading ||
+        !dreamingStatus?.enabled ||
+        dreamingStatus.isRunning ||
+        dreamingStatusError
+      )
+        return;
+      attempted = true;
+      toast.info(t("status-dreaming"));
       const result = await fetchAPI<{
         groupsFailed?: number;
         groupsConsidered?: number;
         groupsMerged?: number;
       }>("/api/dreaming/run", { method: "POST" });
+      if (!result.success && result.error === "dreaming_disabled") {
+        ++dreamingStatusRequest;
+        dreamingStatus = { enabled: false, isRunning: false };
+        dreamingStatusLoading = false;
+        dreamingStatusError = false;
+        toast.error(t("dreaming-disabled"));
+        return;
+      }
       if (!result.success && result.error === "already_running") {
         toast.info(t("toast-dreaming-already-running"));
         return;
@@ -534,7 +597,12 @@ export function createMemoriesExplorer() {
         failKey: "toast-dreaming-failed",
         onSuccess: () => reloadAll(),
       });
+    } catch {
+      toast.error(t("toast-dreaming-failed"));
     } finally {
+      // A timed-out request can still be running on the server. Fail closed if
+      // reconciliation fails, and let the periodic status refresh recover it.
+      if (attempted) await loadDreamingStatus();
       dreamingBusy = false;
     }
   }
@@ -701,6 +769,10 @@ export function createMemoriesExplorer() {
     get dreamingBusy() {
       return dreamingBusy;
     },
+    get dreamingUnavailableReason() {
+      return dreamingUnavailableReason();
+    },
+    loadDreamingStatus,
     get knownTags() {
       const set = new Set<string>();
       for (const memory of memories) {

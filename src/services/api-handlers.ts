@@ -1060,7 +1060,7 @@ export async function handleRunDreaming(
     if (!CONFIG.dreaming.enabled) {
       return {
         success: false,
-        error: "Dreaming is disabled. Set dreaming.enabled to true in opencode-mem.jsonc.",
+        error: "dreaming_disabled",
       };
     }
     const { dreamingService } = await import("./dreaming-service.js");

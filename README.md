@@ -401,7 +401,10 @@ contradictions, and soft-deletes superseded rows into recoverable trash. Pinned 
 are never touched. Set `dreaming.crossProject: true` (or `memory.defaultScope:
 "all-projects"`) to group across project tags; user-scope stays separate. Configure under
 `dreaming` in `opencode-mem.jsonc` (`enabled` default `false`). The web UI exposes
-**Trash** (restore) and **Dream** (manual run). Soft-deleted rows are hard-purged after
+**Trash** (restore) and **Dream** (manual run). `dreaming.enabled` is the master switch
+for both background and manual runs; enable it in the configuration to use **Dream**.
+The button stays unavailable until its status is loaded and while a run is active.
+Soft-deleted rows are hard-purged after
 `dreaming.trashRetentionDays` during normal cleanup.
 
 If OpenCode completes a call without structured output, dreaming retries decision

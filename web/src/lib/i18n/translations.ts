@@ -68,6 +68,10 @@ export const translations = {
     "toast-trash-load-failed": "Failed to load trash",
     "toast-restore-success": "Memory restored",
     "toast-restore-failed": "Failed to restore memory",
+    "dreaming-disabled":
+      "Dreaming is disabled. Set dreaming.enabled to true in opencode-mem.jsonc.",
+    "dreaming-status-loading": "Checking dreaming status…",
+    "dreaming-status-error": "Could not check dreaming status. Retrying automatically…",
     "toast-dreaming-success": "Dreaming completed",
     "toast-dreaming-failed": "Dreaming failed",
     "toast-dreaming-already-running": "Dreaming is already running",
@@ -337,6 +341,11 @@ export const translations = {
     "toast-trash-load-failed": "Papierkorb konnte nicht geladen werden",
     "toast-restore-success": "Memory wiederhergestellt",
     "toast-restore-failed": "Wiederherstellen fehlgeschlagen",
+    "dreaming-disabled":
+      "Dreaming ist deaktiviert. Setze dreaming.enabled in opencode-mem.jsonc auf true.",
+    "dreaming-status-loading": "Dreaming-Status wird geprüft…",
+    "dreaming-status-error":
+      "Dreaming-Status konnte nicht geprüft werden. Automatischer neuer Versuch…",
     "toast-dreaming-success": "Dreaming abgeschlossen",
     "toast-dreaming-failed": "Dreaming fehlgeschlagen",
     "toast-dreaming-already-running": "Dreaming läuft bereits",
@@ -610,6 +619,10 @@ export const translations = {
     "toast-trash-load-failed": "加载回收站失败",
     "toast-restore-success": "记忆已恢复",
     "toast-restore-failed": "恢复记忆失败",
+    "dreaming-disabled":
+      "Dreaming 已禁用。请在 opencode-mem.jsonc 中将 dreaming.enabled 设为 true。",
+    "dreaming-status-loading": "正在检查 Dreaming 状态…",
+    "dreaming-status-error": "无法检查 Dreaming 状态。正在自动重试…",
     "toast-dreaming-success": "Dreaming 完成",
     "toast-dreaming-failed": "Dreaming 失败",
     "toast-dreaming-already-running": "Dreaming 已在运行",
@@ -878,6 +891,9 @@ export const translations = {
     "toast-trash-load-failed": "فشل تحميل المهملات",
     "toast-restore-success": "تمت استعادة الذاكرة",
     "toast-restore-failed": "فشلت استعادة الذاكرة",
+    "dreaming-disabled": "Dreaming معطّل. اضبط dreaming.enabled على true في opencode-mem.jsonc.",
+    "dreaming-status-loading": "جارٍ التحقق من حالة Dreaming…",
+    "dreaming-status-error": "تعذّر التحقق من حالة Dreaming. ستتم إعادة المحاولة تلقائيًا…",
     "toast-dreaming-success": "اكتمل Dreaming",
     "toast-dreaming-failed": "فشل Dreaming",
     "toast-dreaming-already-running": "Dreaming قيد التشغيل بالفعل",
@@ -1184,6 +1200,11 @@ export const translations = {
     "toast-trash-load-failed": "Çöp kutusu yüklenemedi",
     "toast-restore-success": "Bellek geri yüklendi",
     "toast-restore-failed": "Bellek geri yüklenemedi",
+    "dreaming-disabled":
+      "Dreaming devre dışı. opencode-mem.jsonc dosyasında dreaming.enabled değerini true yapın.",
+    "dreaming-status-loading": "Dreaming durumu kontrol ediliyor…",
+    "dreaming-status-error":
+      "Dreaming durumu kontrol edilemedi. Otomatik olarak yeniden denenecek…",
     "toast-dreaming-success": "Dreaming tamamlandı",
     "toast-dreaming-failed": "Dreaming başarısız",
     "toast-dreaming-already-running": "Dreaming zaten çalışıyor",
@@ -1455,6 +1476,11 @@ export const translations = {
     "toast-trash-load-failed": "Prullenbak laden mislukt",
     "toast-restore-success": "Geheugen hersteld",
     "toast-restore-failed": "Herstellen mislukt",
+    "dreaming-disabled":
+      "Dreaming is uitgeschakeld. Zet dreaming.enabled op true in opencode-mem.jsonc.",
+    "dreaming-status-loading": "Dreaming-status controleren…",
+    "dreaming-status-error":
+      "Dreaming-status kon niet worden gecontroleerd. Automatisch opnieuw proberen…",
     "toast-dreaming-success": "Dreaming voltooid",
     "toast-dreaming-failed": "Dreaming mislukt",
     "toast-dreaming-already-running": "Dreaming is al bezig",
