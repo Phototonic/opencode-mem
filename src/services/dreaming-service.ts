@@ -11,6 +11,7 @@ import { tursoShardManager } from "./turso/shard-manager.js";
 import { tursoVectorSearch } from "./turso/vector-search.js";
 import { parseExtractedVector, formatTagsForEmbedding } from "./turso/vector-utils.js";
 import { getV2Client } from "./ai/opencode-provider.js";
+import { MissingStructuredOutputError } from "./ai/structured-output-error.js";
 import { tryAcquireDreamingLock } from "./dreaming-lock.js";
 
 export const DREAMING_MAX_GROUP_SIZE = 5;
@@ -336,9 +337,17 @@ export class DreamingService {
       const { generateStructuredOutput } = await import("./ai/opencode-provider.js");
       let abortedForProvider = false;
 
+      const providerContext = {
+        channel: "opencode",
+        configuredProvider: CONFIG.opencodeProvider,
+        configuredModel: CONFIG.opencodeModel,
+        variant: CONFIG.opencodeVariant ?? null,
+      };
       for (const group of batch) {
+        let attempt = 1;
+        let phase: "generation" | "application" = "generation";
         try {
-          const decision = await generateStructuredOutput({
+          const options = {
             client: v2Client,
             providerID: CONFIG.opencodeProvider,
             modelID: CONFIG.opencodeModel,
@@ -348,7 +357,22 @@ export class DreamingService {
             userPrompt: buildMergePrompt(group),
             schema: dreamingActionSchema,
             directory,
-          });
+          };
+          let decision: z.infer<typeof dreamingActionSchema>;
+          try {
+            decision = await generateStructuredOutput(options);
+          } catch (error) {
+            if (!(error instanceof MissingStructuredOutputError)) throw error;
+            attempt = 2;
+            log("dreaming: retrying missing structured output", {
+              ...providerContext,
+              attempt,
+            });
+            // Each call owns a fresh, least-privilege transient session. Retry only
+            // generation, after the first session's cleanup, never storage mutations.
+            decision = await generateStructuredOutput(options);
+          }
+          phase = "application";
 
           const memberIds = new Set([
             group.representative.id,
@@ -411,9 +435,26 @@ export class DreamingService {
         } catch (error) {
           result.groupsFailed++;
           const errMsg = error instanceof Error ? error.message : String(error);
-          log("dreaming: group failed", { error: errMsg });
+          const providerUnavailable =
+            phase === "generation" &&
+            /ProviderRequestError|API_KEY is not set|401|Unauthorized/i.test(errMsg);
+          // Provider/schema errors can contain echoed memory content. Keep diagnostics
+          // actionable without logging prompts, generated output, or arbitrary payloads.
+          log("dreaming: group failed", {
+            ...providerContext,
+            attempt,
+            phase,
+            error:
+              error instanceof MissingStructuredOutputError
+                ? "missing_structured_output"
+                : error instanceof z.ZodError
+                  ? "invalid_structured_output"
+                  : providerUnavailable
+                    ? "provider_unavailable"
+                    : `${phase}_failed`,
+          });
           // Auth / provider outages will fail every remaining group the same way.
-          if (/ProviderRequestError|API_KEY is not set|401|Unauthorized/i.test(errMsg)) {
+          if (providerUnavailable) {
             const processed =
               result.groupsMerged +
               result.groupsSkipped +

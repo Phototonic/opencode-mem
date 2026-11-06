@@ -37,6 +37,7 @@ import {
   untrackInternalCaptureSession,
 } from "./internal-capture-sessions.js";
 import { createLazyV2Client, type HostTransport } from "./opencode-sdk-client.js";
+import { MissingStructuredOutputError } from "./structured-output-error.js";
 
 /** Dedicated agent registered via the plugin config hook (step-capped). */
 export const STRUCTURED_OUTPUT_AGENT = "opencode-mem-structured";
@@ -572,9 +573,7 @@ async function generateJsonSchemaViaFetch<T>(
 
     const structuredOutput = info.structured_output ?? info.structured;
     if (structuredOutput === undefined || structuredOutput === null) {
-      throw new Error(
-        "opencode-mem: opencode returned no structured output (info.structured_output/info.structured were empty)"
-      );
+      throw new MissingStructuredOutputError();
     }
 
     return args.schema.parse(structuredOutput);
@@ -680,9 +679,7 @@ async function generateViaSdkClient<T>(
 
     const structuredOutput = data.info.structured_output ?? data.info.structured;
     if (structuredOutput === undefined || structuredOutput === null) {
-      throw new Error(
-        "opencode-mem: opencode returned no structured output (info.structured_output/info.structured were empty)"
-      );
+      throw new MissingStructuredOutputError();
     }
     return args.schema.parse(structuredOutput);
   } catch (error) {

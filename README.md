@@ -404,6 +404,13 @@ are never touched. Set `dreaming.crossProject: true` (or `memory.defaultScope:
 **Trash** (restore) and **Dream** (manual run). Soft-deleted rows are hard-purged after
 `dreaming.trashRetentionDays` during normal cleanup.
 
+If OpenCode completes a call without structured output, dreaming retries decision
+generation once in a fresh session using the same configured provider, model, and
+variant. It does not retry validation, authentication, timeout, or storage failures,
+and does not switch to the external API. Each attempt keeps the configured
+`opencodeTimeoutMs` budget. Exhausted groups count once in `groupsFailed`; when
+all groups fail, the idle schedule is not advanced.
+
 ### Choosing / configuring embeddings
 
 Embeddings power similarity search for memories and the user profile. Configure them in the same file (`~/.config/opencode/opencode-mem.jsonc`). There is **no MLX backend** — local embeddings use `@huggingface/transformers` with ONNX, not Apple MLX.
